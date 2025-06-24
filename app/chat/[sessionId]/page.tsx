@@ -38,42 +38,44 @@ export default function ChatPage() {
   const [copied, setCopied] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
   const [socketUrl, setSocketUrl] = useState('');
+  const [errorDetails, setErrorDetails] = useState('');
   
   const myTextareaRef = useRef<HTMLTextAreaElement>(null);
   const partnerTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    // Dynamically determine WebSocket server URL based on environment
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const WEBSOCKET_URL = isDevelopment 
-      ? 'http://localhost:3001' 
-      : 'https://real-time-typing-chat-production.up.railway.app';
+    // Always use your deployed Railway WebSocket server URL
+    const RAILWAY_WEBSOCKET_URL = 'https://real-time-typing-chat-production.up.railway.app';
     
-    setSocketUrl(WEBSOCKET_URL);
-    console.log('Connecting to WebSocket server at:', WEBSOCKET_URL);
+    setSocketUrl(RAILWAY_WEBSOCKET_URL);
+    console.log('Connecting to WebSocket server at:', RAILWAY_WEBSOCKET_URL);
     
-    const newSocket = io(WEBSOCKET_URL, {
+    const newSocket = io(RAILWAY_WEBSOCKET_URL, {
       transports: ['websocket', 'polling'],
       timeout: 20000,
       forceNew: true,
       upgrade: true,
       rememberUpgrade: false,
-      path: '/socket.io/',
       autoConnect: true,
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 5
+      reconnectionAttempts: 5,
+      withCredentials: false,
+      extraHeaders: {
+        'Access-Control-Allow-Origin': '*'
+      }
     });
 
     newSocket.on('connect', () => {
       console.log('Connected to WebSocket server');
       setIsConnected(true);
       setConnectionError(false);
+      setErrorDetails('');
       newSocket.emit('join-session', sessionId);
     });
 
-    newSocket.on('disconnect', () => {
-      console.log('Disconnected from WebSocket server');
+    newSocket.on('disconnect', (reason) => {
+      console.log('Disconnected from WebSocket server:', reason);
       setIsConnected(false);
     });
 
@@ -81,14 +83,18 @@ export default function ChatPage() {
       console.error('Connection error:', error);
       setConnectionError(true);
       setIsConnected(false);
+      setErrorDetails(error.message || 'Unknown connection error');
     });
 
     newSocket.on('reconnect', (attemptNumber) => {
       console.log('Reconnected after', attemptNumber, 'attempts');
+      setConnectionError(false);
+      setErrorDetails('');
     });
 
     newSocket.on('reconnect_error', (error) => {
       console.error('Reconnection error:', error);
+      setErrorDetails(error.message || 'Reconnection failed');
     });
 
     newSocket.on('user-joined', (data: { users: User[], currentUser: User }) => {
@@ -258,16 +264,17 @@ export default function ChatPage() {
               <div className="bg-gray-100 p-3 rounded-md text-sm mb-3">
                 <p><strong>Trying to connect to:</strong> {socketUrl}</p>
                 <p><strong>Current URL:</strong> {typeof window !== 'undefined' ? window.location.href : 'N/A'}</p>
-                <p><strong>Environment:</strong> {process.env.NODE_ENV || 'development'}</p>
+                <p><strong>Error Details:</strong> {errorDetails}</p>
               </div>
               
               <div className="space-y-2 text-sm mb-3">
                 <p><strong>Troubleshooting:</strong></p>
                 <ol className="list-decimal list-inside space-y-1 ml-4">
-                  <li>Check if your WebSocket server is running on port 3001</li>
-                  <li>Verify the server URL is correct for your environment</li>
+                  <li>Check if your Railway WebSocket server is running</li>
+                  <li>Verify the Railway URL is correct: <code className="bg-gray-200 px-1 rounded">{socketUrl}</code></li>
                   <li>Check browser console for detailed error messages</li>
                   <li>Try refreshing the page</li>
+                  <li>Check if Railway service is deployed and active</li>
                 </ol>
               </div>
               
