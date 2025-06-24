@@ -44,13 +44,14 @@ export default function ChatPage() {
   const partnerTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    // Always use your deployed Railway WebSocket server URL
-    const RAILWAY_WEBSOCKET_URL = 'https://real-time-typing-chat-production.up.railway.app';
+    // IMPORTANT: Replace this with your NEW WebSocket server URL
+    // Deploy the websocket-server/ folder separately to Railway
+    const WEBSOCKET_SERVER_URL = 'https://your-websocket-server.up.railway.app';
     
-    setSocketUrl(RAILWAY_WEBSOCKET_URL);
-    console.log('Connecting to WebSocket server at:', RAILWAY_WEBSOCKET_URL);
+    setSocketUrl(WEBSOCKET_SERVER_URL);
+    console.log('Connecting to WebSocket server at:', WEBSOCKET_SERVER_URL);
     
-    const newSocket = io(RAILWAY_WEBSOCKET_URL, {
+    const newSocket = io(WEBSOCKET_SERVER_URL, {
       transports: ['websocket', 'polling'],
       timeout: 20000,
       forceNew: true,
@@ -60,10 +61,7 @@ export default function ChatPage() {
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
-      withCredentials: false,
-      extraHeaders: {
-        'Access-Control-Allow-Origin': '*'
-      }
+      withCredentials: false
     });
 
     newSocket.on('connect', () => {
@@ -268,13 +266,12 @@ export default function ChatPage() {
               </div>
               
               <div className="space-y-2 text-sm mb-3">
-                <p><strong>Troubleshooting:</strong></p>
+                <p><strong>Setup Instructions:</strong></p>
                 <ol className="list-decimal list-inside space-y-1 ml-4">
-                  <li>Check if your Railway WebSocket server is running</li>
-                  <li>Verify the Railway URL is correct: <code className="bg-gray-200 px-1 rounded">{socketUrl}</code></li>
-                  <li>Check browser console for detailed error messages</li>
-                  <li>Try refreshing the page</li>
-                  <li>Check if Railway service is deployed and active</li>
+                  <li>Create a NEW Railway project for the WebSocket server</li>
+                  <li>Deploy the <code className="bg-gray-200 px-1 rounded">websocket-server/</code> folder separately</li>
+                  <li>Update the WEBSOCKET_SERVER_URL in this file with your new Railway URL</li>
+                  <li>The frontend and WebSocket server must be deployed separately</li>
                 </ol>
               </div>
               
