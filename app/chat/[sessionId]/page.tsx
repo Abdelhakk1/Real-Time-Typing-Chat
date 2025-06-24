@@ -43,13 +43,16 @@ export default function ChatPage() {
   const partnerTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    // Use your deployed Railway WebSocket server URL
-    const RAILWAY_WEBSOCKET_URL = 'https://real-time-typing-chat-production.up.railway.app';
+    // Dynamically determine WebSocket server URL based on environment
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const WEBSOCKET_URL = isDevelopment 
+      ? 'http://localhost:3001' 
+      : 'https://real-time-typing-chat-production.up.railway.app';
     
-    setSocketUrl(RAILWAY_WEBSOCKET_URL);
-    console.log('Connecting to WebSocket server at:', RAILWAY_WEBSOCKET_URL);
+    setSocketUrl(WEBSOCKET_URL);
+    console.log('Connecting to WebSocket server at:', WEBSOCKET_URL);
     
-    const newSocket = io(RAILWAY_WEBSOCKET_URL, {
+    const newSocket = io(WEBSOCKET_URL, {
       transports: ['websocket', 'polling'],
       timeout: 20000,
       forceNew: true,
@@ -255,13 +258,14 @@ export default function ChatPage() {
               <div className="bg-gray-100 p-3 rounded-md text-sm mb-3">
                 <p><strong>Trying to connect to:</strong> {socketUrl}</p>
                 <p><strong>Current URL:</strong> {typeof window !== 'undefined' ? window.location.href : 'N/A'}</p>
+                <p><strong>Environment:</strong> {process.env.NODE_ENV || 'development'}</p>
               </div>
               
               <div className="space-y-2 text-sm mb-3">
                 <p><strong>Troubleshooting:</strong></p>
                 <ol className="list-decimal list-inside space-y-1 ml-4">
-                  <li>Check if your Railway WebSocket server is running</li>
-                  <li>Verify the Railway URL is correct</li>
+                  <li>Check if your WebSocket server is running on port 3001</li>
+                  <li>Verify the server URL is correct for your environment</li>
                   <li>Check browser console for detailed error messages</li>
                   <li>Try refreshing the page</li>
                 </ol>
