@@ -37,16 +37,34 @@ export default function ChatPage() {
   const [partnerText, setPartnerText] = useState('');
   const [copied, setCopied] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
+  const [socketUrl, setSocketUrl] = useState('');
   
   const myTextareaRef = useRef<HTMLTextAreaElement>(null);
   const partnerTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    // Connect to local WebSocket server
-    const socketUrl = 'http://localhost:3001';
-    console.log('Connecting to WebSocket server at:', socketUrl);
+    // Determine the correct WebSocket URL based on the current host
+    const getSocketUrl = () => {
+      if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        
+        // If accessing via localhost, use localhost
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+          return 'http://localhost:3001';
+        }
+        
+        // If accessing via IP address or domain, use the same host with port 3001
+        const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+        return `${protocol}//${hostname}:3001`;
+      }
+      return 'http://localhost:3001';
+    };
+
+    const url = getSocketUrl();
+    setSocketUrl(url);
+    console.log('Connecting to WebSocket server at:', url);
     
-    const newSocket = io(socketUrl, {
+    const newSocket = io(url, {
       transports: ['websocket', 'polling'],
       timeout: 20000,
       forceNew: true,
@@ -248,11 +266,27 @@ export default function ChatPage() {
           <Card className="mb-6 p-4 bg-red-50 border-red-200">
             <div className="text-red-800">
               <h3 className="font-semibold mb-2">Connection Issue</h3>
-              <p className="text-sm mb-2">Unable to connect to the WebSocket server. Make sure the server is running:</p>
+              <p className="text-sm mb-2">Unable to connect to the WebSocket server.</p>
+              <div className="bg-gray-100 p-3 rounded-md text-sm mb-3">
+                <p><strong>Trying to connect to:</strong> {socketUrl}</p>
+                <p><strong>Current URL:</strong> {typeof window !== 'undefined' ? window.location.href : 'N/A'}</p>
+              </div>
+              
+              <div className="space-y-2 text-sm mb-3">
+                <p><strong>For mobile access:</strong></p>
+                <ol className="list-decimal list-inside space-y-1 ml-4">
+                  <li>Make sure the WebSocket server is running on your computer</li>
+                  <li>Both devices must be on the same WiFi network</li>
+                  <li>Find your computer's IP address and use that instead of localhost</li>
+                  <li>Example: http://192.168.1.100:3000 instead of localhost:3000</li>
+                </ol>
+              </div>
+              
               <div className="bg-gray-900 text-green-400 p-3 rounded-md text-sm font-mono mb-3">
+                # On your computer, run:<br/>
                 npm run server:dev
               </div>
-              <p className="text-sm mb-3">The server should be running on http://localhost:3001</p>
+              
               <Button 
                 onClick={() => window.location.reload()} 
                 size="sm" 

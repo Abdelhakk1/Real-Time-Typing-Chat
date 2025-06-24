@@ -2,12 +2,27 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
-const path = require('path');
+const os = require('os');
 
 const app = express();
 const server = http.createServer(app);
 
-// Configure Socket.IO with Railway-specific settings
+// Get local IP address
+function getLocalIPAddress() {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const interface of interfaces[name]) {
+      if (interface.family === 'IPv4' && !interface.internal) {
+        return interface.address;
+      }
+    }
+  }
+  return 'localhost';
+}
+
+const localIP = getLocalIPAddress();
+
+// Configure Socket.IO with more permissive CORS for local development
 const io = socketIo(server, {
   cors: {
     origin: "*",
@@ -25,7 +40,7 @@ const io = socketIo(server, {
   serveClient: false
 });
 
-// CORS middleware
+// CORS middleware - very permissive for local development
 app.use(cors({
   origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -43,7 +58,12 @@ app.get('/health', (req, res) => {
     environment: process.env.NODE_ENV || 'development',
     port: process.env.PORT || 3001,
     socketio: 'enabled',
-    path: '/socket.io/'
+    path: '/socket.io/',
+    localIP: localIP,
+    accessUrls: [
+      `http://localhost:${process.env.PORT || 3001}`,
+      `http://${localIP}:${process.env.PORT || 3001}`
+    ]
   });
 });
 
@@ -54,7 +74,8 @@ app.get('/api/status', (req, res) => {
     websocket: 'available',
     sessions: sessions.size,
     users: users.size,
-    socketio_path: '/socket.io/'
+    socketio_path: '/socket.io/',
+    localIP: localIP
   });
 });
 
@@ -62,7 +83,8 @@ app.get('/api/status', (req, res) => {
 app.get('/socket.io/test', (req, res) => {
   res.json({
     message: 'Socket.IO endpoint is working',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    localIP: localIP
   });
 });
 
@@ -235,8 +257,10 @@ const PORT = process.env.PORT || 3001;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+  console.log(`🔗 Local access: http://localhost:${PORT}/health`);
+  console.log(`🌐 Network access: http://${localIP}:${PORT}/health`);
   console.log(`⚡ WebSocket ready on /socket.io/`);
+  console.log(`📱 For mobile access, use: http://${localIP}:3000`);
 });
 
 // Graceful shutdown
