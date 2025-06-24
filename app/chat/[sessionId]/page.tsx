@@ -42,8 +42,8 @@ export default function ChatPage() {
   const partnerTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    // Use the dedicated WebSocket server URL
-    const socketUrl = 'https://realtime-chat-websocket-production.up.railway.app';
+    // Connect to local WebSocket server
+    const socketUrl = 'http://localhost:3001';
     console.log('Connecting to WebSocket server at:', socketUrl);
     
     const newSocket = io(socketUrl, {
@@ -248,12 +248,11 @@ export default function ChatPage() {
           <Card className="mb-6 p-4 bg-red-50 border-red-200">
             <div className="text-red-800">
               <h3 className="font-semibold mb-2">Connection Issue</h3>
-              <p className="text-sm mb-2">Unable to connect to the WebSocket server. This might be due to:</p>
-              <ul className="text-sm list-disc list-inside mb-3 space-y-1">
-                <li>Server maintenance or downtime</li>
-                <li>Network connectivity issues</li>
-                <li>Firewall blocking WebSocket connections</li>
-              </ul>
+              <p className="text-sm mb-2">Unable to connect to the WebSocket server. Make sure the server is running:</p>
+              <div className="bg-gray-900 text-green-400 p-3 rounded-md text-sm font-mono mb-3">
+                npm run server:dev
+              </div>
+              <p className="text-sm mb-3">The server should be running on http://localhost:3001</p>
               <Button 
                 onClick={() => window.location.reload()} 
                 size="sm" 
