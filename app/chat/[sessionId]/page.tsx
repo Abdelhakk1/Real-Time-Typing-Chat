@@ -43,8 +43,8 @@ export default function ChatPage() {
   const partnerTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    // For Railway deployment, use the same domain as the frontend
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || window.location.origin;
+    // Use the dedicated WebSocket server URL
+    const socketUrl = 'https://realtime-chat-websocket-production.up.railway.app';
     console.log('Connecting to WebSocket server at:', socketUrl);
     setDebugInfo(`Attempting connection to: ${socketUrl}`);
     
@@ -256,7 +256,7 @@ export default function ChatPage() {
             <div className="text-red-800">
               <h3 className="font-semibold mb-2">Connection Debug Info:</h3>
               <p className="text-sm mb-1">Status: {debugInfo}</p>
-              <p className="text-sm mb-1">Trying to connect to: {process.env.NEXT_PUBLIC_SOCKET_URL || (typeof window !== 'undefined' ? window.location.origin : 'N/A')}</p>
+              <p className="text-sm mb-1">WebSocket Server: https://realtime-chat-websocket-production.up.railway.app</p>
               <p className="text-sm mb-1">Current URL: {typeof window !== 'undefined' ? window.location.href : 'N/A'}</p>
               <p className="text-sm mb-1">Transport: WebSocket + Polling fallback</p>
               <p className="text-sm mb-1">Socket.IO Path: /socket.io/</p>

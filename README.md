@@ -20,7 +20,14 @@ A beautiful, minimalist real-time chat application where users can see each othe
 - **Real-time**: Socket.IO
 - **Backend**: Node.js, Express
 - **Icons**: Lucide React
-- **Deployment**: Vercel (frontend), Render/Railway (backend)
+- **Deployment**: Vercel (frontend), Railway (WebSocket server)
+
+## Architecture
+
+This app uses a **separate deployment strategy**:
+
+- **Frontend**: Static Next.js app deployed to Vercel/Netlify
+- **WebSocket Server**: Node.js server deployed to Railway
 
 ## Getting Started
 
@@ -42,12 +49,14 @@ A beautiful, minimalist real-time chat application where users can see each othe
    npm install
    ```
 
-3. **Start the WebSocket server**
+3. **Start the WebSocket server** (in server directory)
    ```bash
-   npm run server:dev
+   cd server
+   npm install
+   npm run dev
    ```
 
-4. **Start the Next.js development server** (in a new terminal)
+4. **Start the Next.js development server** (in root directory)
    ```bash
    npm run dev
    ```
@@ -58,44 +67,43 @@ A beautiful, minimalist real-time chat application where users can see each othe
 
 ## Deployment
 
-### Frontend (Vercel)
+### Step 1: Deploy WebSocket Server to Railway
+
+1. Create a new Railway project
+2. Connect your GitHub repository
+3. Set the **Root Directory** to `server`
+4. Railway will automatically detect the Node.js app
+5. Set environment variables:
+   - `NODE_ENV=production`
+   - `FRONTEND_URL=https://your-frontend-domain.com` (optional)
+6. Deploy and note the Railway URL (e.g., `https://your-app.up.railway.app`)
+
+### Step 2: Deploy Frontend to Vercel
 
 1. Push your code to GitHub
 2. Connect your repository to Vercel
-3. Set environment variable:
-   - `NEXT_PUBLIC_SOCKET_URL`: Your deployed WebSocket server URL
-4. Deploy
+3. Vercel will automatically detect the Next.js app
+4. The frontend will be deployed as a static site
+5. No environment variables needed (WebSocket URL is hardcoded)
 
-### WebSocket Server (Render/Railway)
+### Step 3: Update WebSocket URL (if needed)
 
-#### Render
-1. Create a new Web Service on Render
-2. Connect your GitHub repository
-3. Set build command: `cd server && npm install`
-4. Set start command: `cd server && npm start`
-5. Set environment variables:
-   - `FRONTEND_URL`: Your deployed frontend URL
-6. Deploy
+If your Railway URL is different, update the WebSocket URL in:
+`app/chat/[sessionId]/page.tsx` line 32:
 
-#### Railway
-1. Create a new project on Railway
-2. Connect your GitHub repository
-3. Set root directory to `server`
-4. Set environment variables:
-   - `FRONTEND_URL`: Your deployed frontend URL
-5. Deploy
-
-### Environment Variables
-
-**Frontend (.env.local)**
-```
-NEXT_PUBLIC_SOCKET_URL=https://your-websocket-server.onrender.com
+```typescript
+const socketUrl = 'https://your-railway-app.up.railway.app';
 ```
 
-**Backend (Server)**
+## Environment Variables
+
+**Frontend**: No environment variables needed
+
+**Backend (Railway)**:
 ```
-FRONTEND_URL=https://your-frontend.vercel.app
+NODE_ENV=production
 PORT=3001
+FRONTEND_URL=https://your-frontend-domain.com
 ```
 
 ## Project Structure
@@ -109,7 +117,7 @@ PORT=3001
 ├── components/            # Reusable components
 │   └── ui/               # shadcn/ui components
 ├── lib/                  # Utility functions
-├── server/               # WebSocket server
+├── server/               # WebSocket server (separate deployment)
 │   ├── index.js          # Server implementation
 │   └── package.json      # Server dependencies
 └── README.md
@@ -118,32 +126,26 @@ PORT=3001
 ## How It Works
 
 1. **Session Creation**: Users create a unique session ID or join an existing one
-2. **Real-time Connection**: Socket.IO establishes WebSocket connection between users
+2. **Real-time Connection**: Socket.IO establishes WebSocket connection to Railway server
 3. **Typing Sync**: Every keystroke is immediately broadcast to connected users
 4. **User Management**: Server tracks active users and their typing status
 5. **Session Cleanup**: Inactive sessions are automatically cleaned up
 
-## Key Features Explained
+## Troubleshooting
 
-### Real-time Typing
-- Each character typed is instantly sent via WebSocket
-- No send button required - everything happens live
-- Both users can type simultaneously without conflicts
+### Connection Issues
 
-### Session Management
-- Unique session IDs generated using nanoid
-- Multiple users can join the same session
-- Sessions are ephemeral and cleanup automatically
+1. Check that the Railway WebSocket server is running
+2. Verify the WebSocket URL in the frontend code
+3. Check browser console for connection errors
+4. Test the health endpoint: `https://your-railway-app.up.railway.app/health`
 
-### Responsive Design
-- Desktop: Side-by-side text areas
-- Mobile: Stacked layout for better usability
-- Touch-friendly interface on all devices
+### Railway Deployment Issues
 
-### Connection Status
-- Real-time connection indicators
-- User presence and typing status
-- Graceful handling of disconnections
+1. Ensure Root Directory is set to `server`
+2. Check that `package.json` exists in the server directory
+3. Verify environment variables are set correctly
+4. Check Railway logs for server errors
 
 ## Browser Support
 
@@ -177,7 +179,3 @@ PORT=3001
 ## License
 
 MIT License - feel free to use this project for personal or commercial purposes.
-
-## Support
-
-For questions or issues, please open a GitHub issue or contact [your-email].
