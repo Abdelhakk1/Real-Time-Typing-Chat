@@ -44,9 +44,8 @@ export default function ChatPage() {
   const partnerTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    // IMPORTANT: Replace this with your NEW WebSocket server URL
-    // Deploy the websocket-server/ folder separately to Railway
-    const WEBSOCKET_SERVER_URL = 'https://your-websocket-server.up.railway.app';
+    // Updated WebSocket server URL - your deployed Railway server
+    const WEBSOCKET_SERVER_URL = 'https://websocket-server-production-d70c.up.railway.app';
     
     setSocketUrl(WEBSOCKET_SERVER_URL);
     console.log('Connecting to WebSocket server at:', WEBSOCKET_SERVER_URL);
@@ -266,12 +265,12 @@ export default function ChatPage() {
               </div>
               
               <div className="space-y-2 text-sm mb-3">
-                <p><strong>Setup Instructions:</strong></p>
+                <p><strong>If you're still seeing this error:</strong></p>
                 <ol className="list-decimal list-inside space-y-1 ml-4">
-                  <li>Create a NEW Railway project for the WebSocket server</li>
-                  <li>Deploy the <code className="bg-gray-200 px-1 rounded">websocket-server/</code> folder separately</li>
-                  <li>Update the WEBSOCKET_SERVER_URL in this file with your new Railway URL</li>
-                  <li>The frontend and WebSocket server must be deployed separately</li>
+                  <li>Check that your Railway WebSocket server is running</li>
+                  <li>Visit: <code className="bg-gray-200 px-1 rounded">{socketUrl}/health</code></li>
+                  <li>Verify the Railway URL is correct</li>
+                  <li>Check Railway logs for any server errors</li>
                 </ol>
               </div>
               
