@@ -7,29 +7,33 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 
-// Configure CORS for Socket.IO
+// Configure Socket.IO with Railway-specific settings
 const io = socketIo(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
+    allowedHeaders: ["*"],
     credentials: true
   },
   transports: ['websocket', 'polling'],
-  allowEIO3: true
+  allowEIO3: true,
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  upgradeTimeout: 30000,
+  maxHttpBufferSize: 1e6,
+  path: '/socket.io/',
+  serveClient: false
 });
 
+// CORS middleware
 app.use(cors({
   origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["*"],
   credentials: true
 }));
 
 app.use(express.json());
-
-// Serve static files from Next.js build (for Railway deployment)
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../.next/static')));
-  app.use(express.static(path.join(__dirname, '../public')));
-}
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -37,7 +41,9 @@ app.get('/health', (req, res) => {
     status: 'OK', 
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    port: process.env.PORT || 3001
+    port: process.env.PORT || 3001,
+    socketio: 'enabled',
+    path: '/socket.io/'
   });
 });
 
@@ -47,7 +53,16 @@ app.get('/api/status', (req, res) => {
     server: 'running',
     websocket: 'available',
     sessions: sessions.size,
-    users: users.size
+    users: users.size,
+    socketio_path: '/socket.io/'
+  });
+});
+
+// Socket.IO endpoint test
+app.get('/socket.io/test', (req, res) => {
+  res.json({
+    message: 'Socket.IO endpoint is working',
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -66,7 +81,7 @@ function getRandomUserName() {
 }
 
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+  console.log('User connected:', socket.id, 'from:', socket.handshake.address);
 
   socket.on('join-session', (sessionId) => {
     console.log(`User ${socket.id} joining session ${sessionId}`);
@@ -167,8 +182,8 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+  socket.on('disconnect', (reason) => {
+    console.log('User disconnected:', socket.id, 'reason:', reason);
     
     const user = users.get(socket.id);
     if (user) {
@@ -196,6 +211,10 @@ io.on('connection', (socket) => {
       users.delete(socket.id);
     }
   });
+
+  socket.on('error', (error) => {
+    console.error('Socket error for', socket.id, ':', error);
+  });
 });
 
 // Clean up old sessions periodically (every hour)
@@ -214,14 +233,23 @@ setInterval(() => {
 const PORT = process.env.PORT || 3001;
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Health check available at http://localhost:${PORT}/health`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+  console.log(`⚡ WebSocket ready on /socket.io/`);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
   server.close(() => {
     console.log('Server closed');
     process.exit(0);

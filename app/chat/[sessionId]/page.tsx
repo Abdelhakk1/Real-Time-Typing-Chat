@@ -43,7 +43,6 @@ export default function ChatPage() {
   const partnerTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    // Connect to WebSocket server
     // For Railway deployment, use the same domain as the frontend
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || window.location.origin;
     console.log('Connecting to WebSocket server at:', socketUrl);
@@ -260,6 +259,7 @@ export default function ChatPage() {
               <p className="text-sm mb-1">Trying to connect to: {process.env.NEXT_PUBLIC_SOCKET_URL || (typeof window !== 'undefined' ? window.location.origin : 'N/A')}</p>
               <p className="text-sm mb-1">Current URL: {typeof window !== 'undefined' ? window.location.href : 'N/A'}</p>
               <p className="text-sm mb-1">Transport: WebSocket + Polling fallback</p>
+              <p className="text-sm mb-1">Socket.IO Path: /socket.io/</p>
               <div className="mt-2">
                 <Button 
                   onClick={() => window.location.reload()} 

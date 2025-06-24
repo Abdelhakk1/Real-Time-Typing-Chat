@@ -8,8 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "server": "node server/index.js",
-    "server:dev": "nodemon server/index.js",
-    "railway:start": "npm run build && node server/railway.js"
+    "server:dev": "nodemon server/index.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -35,7 +34,7 @@
     "@radix-ui/react-separator": "^1.1.0",
     "@radix-ui/react-slider": "^1.2.0",
     "@radix-ui/react-slot": "^1.1.0",
-    "@radix-ui/react-switch": "^1.1.0",
+    "@radix-ui/react-switch": "^1.1.1",
     "@radix-ui/react-tabs": "^1.1.0",
     "@radix-ui/react-toast": "^1.2.1",
     "@radix-ui/react-toggle": "^1.1.0",
