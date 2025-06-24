@@ -4,8 +4,15 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: { unoptimized: true },
-  // Remove output config to allow default server-side rendering
-  // which properly handles dynamic routes
+  // For Railway deployment with both frontend and backend
+  async rewrites() {
+    return [
+      {
+        source: '/socket.io/:path*',
+        destination: '/api/socket/:path*',
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

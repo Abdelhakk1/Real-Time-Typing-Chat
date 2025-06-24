@@ -43,32 +43,42 @@ export default function ChatPage() {
 
   useEffect(() => {
     // Connect to WebSocket server
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
+    // For Railway deployment, use the same domain as the frontend
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || window.location.origin;
+    console.log('Connecting to WebSocket server at:', socketUrl);
+    
     const newSocket = io(socketUrl, {
       transports: ['websocket', 'polling'],
+      timeout: 20000,
+      forceNew: true,
     });
 
     newSocket.on('connect', () => {
+      console.log('Connected to WebSocket server');
       setIsConnected(true);
       setConnectionError(false);
       newSocket.emit('join-session', sessionId);
     });
 
     newSocket.on('disconnect', () => {
+      console.log('Disconnected from WebSocket server');
       setIsConnected(false);
     });
 
-    newSocket.on('connect_error', () => {
+    newSocket.on('connect_error', (error) => {
+      console.error('Connection error:', error);
       setConnectionError(true);
       setIsConnected(false);
     });
 
     newSocket.on('user-joined', (data: { users: User[], currentUser: User }) => {
+      console.log('User joined:', data);
       setUsers(data.users);
       setCurrentUser(data.currentUser);
     });
 
     newSocket.on('user-left', (data: { users: User[] }) => {
+      console.log('User left:', data);
       setUsers(data.users);
     });
 
@@ -218,6 +228,17 @@ export default function ChatPage() {
             )}
           </div>
         </Card>
+
+        {/* Debug Info (remove in production) */}
+        {connectionError && (
+          <Card className="mb-6 p-4 bg-red-50 border-red-200">
+            <div className="text-red-800">
+              <h3 className="font-semibold mb-2">Connection Debug Info:</h3>
+              <p className="text-sm">Trying to connect to: {process.env.NEXT_PUBLIC_SOCKET_URL || window.location.origin}</p>
+              <p className="text-sm">Current URL: {typeof window !== 'undefined' ? window.location.href : 'N/A'}</p>
+            </div>
+          </Card>
+        )}
 
         {/* Chat Interface */}
         <div className="grid lg:grid-cols-2 gap-6 h-[calc(100vh-280px)] min-h-[400px]">

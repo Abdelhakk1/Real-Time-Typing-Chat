@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node server/index.js",
     "lint": "next lint",
     "server": "node server/index.js",
     "server:dev": "nodemon server/index.js"

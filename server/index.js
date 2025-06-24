@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -9,33 +10,45 @@ const server = http.createServer(app);
 // Configure CORS for Socket.IO
 const io = socketIo(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || [
-      "http://localhost:3000", 
-      "https://*.vercel.app",
-      "http://*.local-credentialless.webcontainer-api.io",
-      "https://*.local-credentialless.webcontainer-api.io"
-    ],
+    origin: "*",
     methods: ["GET", "POST"],
     credentials: true
   },
-  transports: ['websocket', 'polling']
+  transports: ['websocket', 'polling'],
+  allowEIO3: true
 });
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || [
-    "http://localhost:3000", 
-    "https://*.vercel.app",
-    "http://*.local-credentialless.webcontainer-api.io",
-    "https://*.local-credentialless.webcontainer-api.io"
-  ],
+  origin: "*",
   credentials: true
 }));
 
 app.use(express.json());
 
+// Serve static files from Next.js build (for Railway deployment)
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../.next/static')));
+  app.use(express.static(path.join(__dirname, '../public')));
+}
+
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    port: process.env.PORT || 3001
+  });
+});
+
+// API endpoint to check server status
+app.get('/api/status', (req, res) => {
+  res.json({
+    server: 'running',
+    websocket: 'available',
+    sessions: sessions.size,
+    users: users.size
+  });
 });
 
 // Store active sessions and users
@@ -200,8 +213,9 @@ setInterval(() => {
 
 const PORT = process.env.PORT || 3001;
 
-server.listen(PORT, () => {
-  console.log(`WebSocket server running on port ${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Health check available at http://localhost:${PORT}/health`);
 });
 
