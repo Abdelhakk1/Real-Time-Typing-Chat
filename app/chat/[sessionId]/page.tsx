@@ -43,28 +43,13 @@ export default function ChatPage() {
   const partnerTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    // Determine the correct WebSocket URL based on the current host
-    const getSocketUrl = () => {
-      if (typeof window !== 'undefined') {
-        const hostname = window.location.hostname;
-        
-        // If accessing via localhost, use localhost
-        if (hostname === 'localhost' || hostname === '127.0.0.1') {
-          return 'http://localhost:3001';
-        }
-        
-        // If accessing via IP address or domain, use the same host with port 3001
-        const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
-        return `${protocol}//${hostname}:3001`;
-      }
-      return 'http://localhost:3001';
-    };
-
-    const url = getSocketUrl();
-    setSocketUrl(url);
-    console.log('Connecting to WebSocket server at:', url);
+    // Use your deployed Railway WebSocket server URL
+    const RAILWAY_WEBSOCKET_URL = 'https://real-time-typing-chat-production.up.railway.app';
     
-    const newSocket = io(url, {
+    setSocketUrl(RAILWAY_WEBSOCKET_URL);
+    console.log('Connecting to WebSocket server at:', RAILWAY_WEBSOCKET_URL);
+    
+    const newSocket = io(RAILWAY_WEBSOCKET_URL, {
       transports: ['websocket', 'polling'],
       timeout: 20000,
       forceNew: true,
@@ -273,18 +258,13 @@ export default function ChatPage() {
               </div>
               
               <div className="space-y-2 text-sm mb-3">
-                <p><strong>For mobile access:</strong></p>
+                <p><strong>Troubleshooting:</strong></p>
                 <ol className="list-decimal list-inside space-y-1 ml-4">
-                  <li>Make sure the WebSocket server is running on your computer</li>
-                  <li>Both devices must be on the same WiFi network</li>
-                  <li>Find your computer's IP address and use that instead of localhost</li>
-                  <li>Example: http://192.168.1.100:3000 instead of localhost:3000</li>
+                  <li>Check if your Railway WebSocket server is running</li>
+                  <li>Verify the Railway URL is correct</li>
+                  <li>Check browser console for detailed error messages</li>
+                  <li>Try refreshing the page</li>
                 </ol>
-              </div>
-              
-              <div className="bg-gray-900 text-green-400 p-3 rounded-md text-sm font-mono mb-3">
-                # On your computer, run:<br/>
-                npm run server:dev
               </div>
               
               <Button 
