@@ -37,7 +37,6 @@ export default function ChatPage() {
   const [partnerText, setPartnerText] = useState('');
   const [copied, setCopied] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<string>('');
   
   const myTextareaRef = useRef<HTMLTextAreaElement>(null);
   const partnerTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -46,7 +45,6 @@ export default function ChatPage() {
     // Use the dedicated WebSocket server URL
     const socketUrl = 'https://realtime-chat-websocket-production.up.railway.app';
     console.log('Connecting to WebSocket server at:', socketUrl);
-    setDebugInfo(`Attempting connection to: ${socketUrl}`);
     
     const newSocket = io(socketUrl, {
       transports: ['websocket', 'polling'],
@@ -65,31 +63,26 @@ export default function ChatPage() {
       console.log('Connected to WebSocket server');
       setIsConnected(true);
       setConnectionError(false);
-      setDebugInfo('Connected successfully!');
       newSocket.emit('join-session', sessionId);
     });
 
     newSocket.on('disconnect', () => {
       console.log('Disconnected from WebSocket server');
       setIsConnected(false);
-      setDebugInfo('Disconnected from server');
     });
 
     newSocket.on('connect_error', (error) => {
       console.error('Connection error:', error);
       setConnectionError(true);
       setIsConnected(false);
-      setDebugInfo(`Connection failed: ${error.message || 'Unknown error'}`);
     });
 
     newSocket.on('reconnect', (attemptNumber) => {
       console.log('Reconnected after', attemptNumber, 'attempts');
-      setDebugInfo(`Reconnected after ${attemptNumber} attempts`);
     });
 
     newSocket.on('reconnect_error', (error) => {
       console.error('Reconnection error:', error);
-      setDebugInfo(`Reconnection failed: ${error.message || 'Unknown error'}`);
     });
 
     newSocket.on('user-joined', (data: { users: User[], currentUser: User }) => {
@@ -250,26 +243,25 @@ export default function ChatPage() {
           </div>
         </Card>
 
-        {/* Debug Info */}
-        {(connectionError || !isConnected) && (
+        {/* Connection Error Debug */}
+        {connectionError && (
           <Card className="mb-6 p-4 bg-red-50 border-red-200">
             <div className="text-red-800">
-              <h3 className="font-semibold mb-2">Connection Debug Info:</h3>
-              <p className="text-sm mb-1">Status: {debugInfo}</p>
-              <p className="text-sm mb-1">WebSocket Server: https://realtime-chat-websocket-production.up.railway.app</p>
-              <p className="text-sm mb-1">Current URL: {typeof window !== 'undefined' ? window.location.href : 'N/A'}</p>
-              <p className="text-sm mb-1">Transport: WebSocket + Polling fallback</p>
-              <p className="text-sm mb-1">Socket.IO Path: /socket.io/</p>
-              <div className="mt-2">
-                <Button 
-                  onClick={() => window.location.reload()} 
-                  size="sm" 
-                  variant="outline"
-                  className="text-red-700 border-red-300 hover:bg-red-100"
-                >
-                  Retry Connection
-                </Button>
-              </div>
+              <h3 className="font-semibold mb-2">Connection Issue</h3>
+              <p className="text-sm mb-2">Unable to connect to the WebSocket server. This might be due to:</p>
+              <ul className="text-sm list-disc list-inside mb-3 space-y-1">
+                <li>Server maintenance or downtime</li>
+                <li>Network connectivity issues</li>
+                <li>Firewall blocking WebSocket connections</li>
+              </ul>
+              <Button 
+                onClick={() => window.location.reload()} 
+                size="sm" 
+                variant="outline"
+                className="text-red-700 border-red-300 hover:bg-red-100"
+              >
+                Retry Connection
+              </Button>
             </div>
           </Card>
         )}
