@@ -6,8 +6,8 @@ const nextConfig = {
   images: { 
     unoptimized: true 
   },
-  // Remove static export - not suitable for dynamic routes
-  // Keep server-side rendering for proper dynamic route handling
+  // Configure for server-side rendering to handle dynamic routes properly
+  output: 'standalone',
 };
 
 module.exports = nextConfig;
